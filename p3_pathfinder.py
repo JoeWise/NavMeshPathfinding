@@ -14,15 +14,23 @@ def find_path(source_point, destination_point, mesh):
         if box[0] < destination_point[0] < box[1] and box[2] < destination_point[1] < box[3]:
             destination_box = box
             visited_nodes.append(box)
+			
+    #if the points are in the same box, just return the two points as a path
+    if source_box == destination_box:
+        path.append((source_point, destination_point))
+        return path, visited_nodes
 
     bfspath, prev = bfs(source_box, destination_box, mesh)
-
+    #add the initial point to the path
+    path.append((source_point, ((bfspath[0][0] + bfspath[0][1])/2, (bfspath[0][2] + bfspath[0][3])/2)))
     for i in range(0,len(bfspath)-1):
         point1 = ((bfspath[i][0] + bfspath[i][1])/2, (bfspath[i][2] + bfspath[i][3])/2)
         point2 = ((bfspath[i+1][0] + bfspath[i+1][1])/2, (bfspath[i+1][2] + bfspath[i+1][3])/2)
 
         path.append((point1, point2))
-
+    #end the path with the destination point
+    path.append((((bfspath[-1][0] + bfspath[-1][1])/2, (bfspath[-1][2] + bfspath[-1][3])/2), destination_point))
+    
     if path == []:
         print ("no path found!")
     else:
