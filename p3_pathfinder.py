@@ -60,7 +60,13 @@ def bfs(source_box, destination_box, mesh):
     if node == destination_box:
         path = []
         while node:
-            path.append(node)
+            if prev[node]:
+                x1 = max(node[0], prev[node][0])
+                x2 = min(node[1], prev[node][1])
+                y1 = max(node[2], prev[node][2])
+                y2 = min(node[3], prev[node][3])
+                newNode = (x1,x2,y1,y2)
+                path.append(newNode)
             node = prev[node]
         path.reverse()
         return path, prev
