@@ -17,8 +17,11 @@ def find_path(source_point, destination_point, mesh):
 
     bfspath, prev = bfs(source_box, destination_box, mesh)
 
-    for node in bfspath:
-        path.append(((node[0] + node[1])/2, (node[2] + node[3])/2))
+    for i in range(0,len(bfspath)-1):
+        point1 = ((bfspath[i][0] + bfspath[i][1])/2, (bfspath[i][2] + bfspath[i][3])/2)
+        point2 = ((bfspath[i+1][0] + bfspath[i+1][1])/2, (bfspath[i+1][2] + bfspath[i+1][3])/2)
+
+        path.append((point1, point2))
 
     if path == []:
         print ("no path found!")
