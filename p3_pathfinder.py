@@ -22,14 +22,11 @@ def find_path(source_point, destination_point, mesh):
 
     bfspath, prev = bfs(source_box, destination_box, mesh)
     #add the initial point to the path
-    path.append((source_point, ((bfspath[0][0] + bfspath[0][1])/2, (bfspath[0][2] + bfspath[0][3])/2)))
+    path.append((source_point, bfspath[0]))
     for i in range(0,len(bfspath)-1):
-        point1 = ((bfspath[i][0] + bfspath[i][1])/2, (bfspath[i][2] + bfspath[i][3])/2)
-        point2 = ((bfspath[i+1][0] + bfspath[i+1][1])/2, (bfspath[i+1][2] + bfspath[i+1][3])/2)
-
-        path.append((point1, point2))
+        path.append((bfspath[i], bfspath[i+1]))
     #end the path with the destination point
-    path.append((((bfspath[-1][0] + bfspath[-1][1])/2, (bfspath[-1][2] + bfspath[-1][3])/2), destination_point))
+    path.append((bfspath[-1], destination_point))
     
     if path == []:
         print ("no path found!")
@@ -47,6 +44,7 @@ def find_path(source_point, destination_point, mesh):
 def bfs(source_box, destination_box, mesh):
 
     prev = {source_box: None}
+    detail_points = {}
 
     q = [source_box]
 
@@ -63,18 +61,20 @@ def bfs(source_box, destination_box, mesh):
         for next_node in neighbors:
             if next_node not in prev:
                 prev[next_node] = node
+                #create the point that we will be moving to
+                x1 = max(next_node[0], node[0])
+                x2 = min(next_node[1], node[1])
+                y1 = max(next_node[2], node[2])
+                y2 = min(next_node[3], node[3])
+                point = ((x1 + x2)/2, (y1 + y2)/2)
+                detail_points[next_node] = point
                 q.append(next_node)
 
     if node == destination_box:
         path = []
         while node:
             if prev[node]:
-                x1 = max(node[0], prev[node][0])
-                x2 = min(node[1], prev[node][1])
-                y1 = max(node[2], prev[node][2])
-                y2 = min(node[3], prev[node][3])
-                newNode = (x1,x2,y1,y2)
-                path.append(newNode)
+                path.append(detail_points[node])
             node = prev[node]
         path.reverse()
         return path, prev
