@@ -19,24 +19,29 @@ def find_path(source_point, destination_point, mesh):
         if box[0] < destination_point[0] < box[1] and box[2] < destination_point[1] < box[3]:
             destination_box = box
             visited_nodes.append(box)
+
+    #check to make sure the selected point have boxes to search with (didn't click a wall)
+    if source_box == () or destination_box == ():
+        print ("no path found!")
+        return path, visited_nodes
 			
     #if the points are in the same box, just return the two points as a path
     if source_box == destination_box:
         path.append((source_point, destination_point))
         return path, visited_nodes
 
-    #bfspath, prev = bfs(source_box, destination_box, mesh)
-    bfspath, prev = dijkstras(source_point, destination_point, mesh)
-    #bfspath, prev = a_star(source_point, destination_point, mesh)
+    #loaded_path, prev = bfs(source_box, destination_box, mesh)
+    #loaded_path, prev = dijkstras(source_point, destination_point, mesh)
+    loaded_path, prev = a_star(source_point, destination_point, mesh)
     #add the initial point to the path
-    if bfspath == []:
+    if loaded_path == []:
         print ("no path found!")
     else:
-        path.append((source_point, bfspath[0]))
-        for i in range(0,len(bfspath)-1):
-            path.append((bfspath[i], bfspath[i+1]))
+        path.append((source_point, loaded_path[0]))
+        for i in range(0,len(loaded_path)-1):
+            path.append((loaded_path[i], loaded_path[i+1]))
         #end the path with the destination point
-        path.append((bfspath[-1], destination_point))
+        path.append((loaded_path[-1], destination_point))
 
     for node in prev:
         if prev[node] and not isinstance(prev[node], (int, long)):
