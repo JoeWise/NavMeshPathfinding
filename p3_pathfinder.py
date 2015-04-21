@@ -1,6 +1,10 @@
 from math import sqrt
 from heapq import heappush, heappop
 
+
+def point_distance(point1, point2):
+    return sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
+
 def find_path(source_point, destination_point, mesh):
     path = []
     visited_nodes = []
@@ -23,6 +27,7 @@ def find_path(source_point, destination_point, mesh):
 
     #bfspath, prev = bfs(source_box, destination_box, mesh)
     bfspath, prev = dijkstras(source_point, destination_point, mesh)
+    #bfspath, prev = a_star(source_point, destination_point, mesh)
     #add the initial point to the path
     if bfspath == []:
         print ("no path found!")
@@ -134,10 +139,67 @@ def dijkstras(source_point, destination_point, mesh):
                 y2 = min(next_node[3], node[1][3])
                 point = ((x1 + x2)/2, (y1 + y2)/2)
                 prev_point = detail_points[node[1]]
-                distance = sqrt((point[0] - prev_point[0])**2 + (point[1] - prev_point[1])**2)
-                distance += dist[detail_points[node[1]]]
+                distance = dist[detail_points[node[1]]] + point_distance(prev_point, point)
                 detail_points[next_node] = point
                 dist[point] = distance
                 heappush(q, (distance, next_node))
+
+    return [], prev
+
+def a_star(source_point, destination_point, mesh):
+
+    #first find the source and destination boxes
+    source_box = ()
+    destination_box = ()
+
+    boxes = mesh['boxes']
+    for box in boxes:
+        if box[0] < source_point[0] < box[1] and box[2] < source_point[1] < box[3]:
+            source_box = box
+        if box[0] < destination_point[0] < box[1] and box[2] < destination_point[1] < box[3]:
+            destination_box = box
+
+    prev = {source_box: None}
+    detail_points = {}
+    dist = {}
+
+    start_dist = point_distance(source_point, destination_point)
+
+    detail_points[source_box] = source_point
+    dist[source_point] = 0
+    #nodes will contain their distance to make heappop pop the next shortest node
+    q = [(start_dist, source_box)]
+
+    while q:
+        node = heappop(q)
+
+        #Check if node is found
+        if node[1] == destination_box:
+            path = []
+            check_node = node[1]
+            while check_node:
+                if prev[check_node]:
+                    path.append(detail_points[check_node])
+                check_node = prev[check_node]
+            path.reverse()
+            return path, prev
+
+        adj = mesh['adj']
+        neighbors = adj[node[1]]
+        for next_node in neighbors:
+            if next_node not in prev:
+                prev[next_node] = node[1]
+                #create the point that we will be moving to
+                x1 = max(next_node[0], node[1][0])
+                x2 = min(next_node[1], node[1][1])
+                y1 = max(next_node[2], node[1][2])
+                y2 = min(next_node[3], node[1][3])
+                point = ((x1 + x2)/2, (y1 + y2)/2)
+                prev_point = detail_points[node[1]]
+                distance = dist[detail_points[node[1]]] + point_distance(prev_point, point)
+                detail_points[next_node] = point
+                dist[point] = distance
+                dist_remaining = point_distance(point, destination_point)
+                heappush(q, (distance + dist_remaining, next_node))
 
     return [], prev
