@@ -249,7 +249,12 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
             x2 = min(backward_prev[node[1]][1], node[1][1])
             y1 = max(backward_prev[node[1]][2], node[1][2])
             y2 = min(backward_prev[node[1]][3], node[1][3])
-            point = ((x1 + x2)/2, (y1 + y2)/2)
+            point1 = ((x1 + x2)/2, (y1 + y2)/2)
+            x1 = max(forward_prev[node[1]][0], node[1][0])
+            x2 = min(forward_prev[node[1]][1], node[1][1])
+            y1 = max(forward_prev[node[1]][2], node[1][2])
+            y2 = min(forward_prev[node[1]][3], node[1][3])
+            point2 = ((x1 + x2)/2, (y1 + y2)/2)
 
             forward_path = []
             backward_path = []
@@ -264,8 +269,10 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
                     backward_path.append(detail_points[check_node])
                 check_node = backward_prev[check_node]
             forward_path.reverse()
-
-            forward_path.append(point)
+            forward_path.append(point2)
+            forward_path.append(backward_path.pop(0))
+            forward_path.append(point1)
+            #forward_path.append(forward_path[-1])
 
             for segment in backward_path:
                 forward_path.append(segment)
