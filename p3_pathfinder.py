@@ -262,8 +262,8 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
                 forward_path.append(segment)
             prev = forward_prev.copy()
             prev.update(backward_prev)
-            #prev[(-1,-1,-1,-1)] = forward_prev[node[1]]
-            #prev[(-2,-1,-1,-1)] = backward_prev[node[1]]
+			#add in the overwritten middle node real quick
+            prev[(-1,-1,-1,-1)] = node[1]
 
             return forward_path, prev
 
