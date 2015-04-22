@@ -5,6 +5,14 @@ from heapq import heappush, heappop
 def point_distance(point1, point2):
     return sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
+def calculate_midpoint(box1, box2):
+    x1 = max(box1[0], box2[0])
+    x2 = min(box1[1], box2[1])
+    y1 = max(box1[2], box2[2])
+    y2 = min(box1[3], box2[3])
+    point = ((x1 + x2)/2, (y1 + y2)/2)
+    return point
+
 def find_path(source_point, destination_point, mesh):
     path = []
     visited_nodes = []
@@ -33,7 +41,7 @@ def find_path(source_point, destination_point, mesh):
     #loaded_path, prev = bfs(source_box, destination_box, mesh)
     #loaded_path, prev = dijkstras(source_point, destination_point, mesh)
     loaded_path, prev = a_star(source_point, destination_point, mesh)
-    loaded_path, prev = bidirectional_dijkstras(source_point, destination_point, mesh)
+    #loaded_path, prev = bidirectional_dijkstras(source_point, destination_point, mesh)
     #add the initial point to the path
     if loaded_path == []:
         print ("no path found!")
@@ -72,11 +80,7 @@ def bfs(source_box, destination_box, mesh):
             if next_node not in prev:
                 prev[next_node] = node
                 #create the point that we will be moving to
-                x1 = max(next_node[0], node[0])
-                x2 = min(next_node[1], node[1])
-                y1 = max(next_node[2], node[2])
-                y2 = min(next_node[3], node[3])
-                point = ((x1 + x2)/2, (y1 + y2)/2)
+                point = calculate_midpoint(next_node, node[1])
                 detail_points[next_node] = point
                 q.append(next_node)
 
@@ -139,11 +143,7 @@ def dijkstras(source_point, destination_point, mesh):
             if next_node not in prev:
                 prev[next_node] = node[1]
                 #create the point that we will be moving to
-                x1 = max(next_node[0], node[1][0])
-                x2 = min(next_node[1], node[1][1])
-                y1 = max(next_node[2], node[1][2])
-                y2 = min(next_node[3], node[1][3])
-                point = ((x1 + x2)/2, (y1 + y2)/2)
+                point = calculate_midpoint(next_node, node[1])
                 prev_point = detail_points[node[1]]
                 distance = dist[detail_points[node[1]]] + point_distance(prev_point, point)
                 detail_points[next_node] = point
@@ -194,19 +194,19 @@ def a_star(source_point, destination_point, mesh):
         neighbors = adj[node[1]]
         for next_node in neighbors:
             if next_node not in prev:
-                prev[next_node] = node[1]
+                
                 #create the point that we will be moving to
-                x1 = max(next_node[0], node[1][0])
-                x2 = min(next_node[1], node[1][1])
-                y1 = max(next_node[2], node[1][2])
-                y2 = min(next_node[3], node[1][3])
-                point = ((x1 + x2)/2, (y1 + y2)/2)
+                point = calculate_midpoint(next_node, node[1])
                 prev_point = detail_points[node[1]]
                 distance = dist[detail_points[node[1]]] + point_distance(prev_point, point)
-                detail_points[next_node] = point
-                dist[point] = distance
-                dist_remaining = point_distance(point, destination_point)
-                heappush(q, (distance + dist_remaining, next_node))
+                if distance < node[0]:
+                    prev[next_node] = node[1]
+                    detail_points[next_node] = point
+                    dist[point] = distance
+                    dist_remaining = point_distance(point, destination_point)
+                    heappush(q, (distance + dist_remaining, next_node))
+                else:
+                    print "false "
 
     return [], prev
 
@@ -245,16 +245,8 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
         #Check if node is found
         if node[1] in backward_prev and node[1] in forward_prev:
                #make final conjoining point
-            x1 = max(backward_prev[node[1]][0], node[1][0])
-            x2 = min(backward_prev[node[1]][1], node[1][1])
-            y1 = max(backward_prev[node[1]][2], node[1][2])
-            y2 = min(backward_prev[node[1]][3], node[1][3])
-            point2 = ((x1 + x2)/2, (y1 + y2)/2)
-            x1 = max(forward_prev[node[1]][0], node[1][0])
-            x2 = min(forward_prev[node[1]][1], node[1][1])
-            y1 = max(forward_prev[node[1]][2], node[1][2])
-            y2 = min(forward_prev[node[1]][3], node[1][3])
-            point1 = ((x1 + x2)/2, (y1 + y2)/2)
+            point2 = calculate_midpoint(backward_prev[node[1]], node[1])
+            point1 = calculate_midpoint(forward_prev[node[1]], node[1])
 
             forward_path = []
             backward_path = []
@@ -292,11 +284,7 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
                 if next_node not in forward_prev:
                     forward_prev[next_node] = node[1]
                     #create the point that we will be moving to
-                    x1 = max(next_node[0], node[1][0])
-                    x2 = min(next_node[1], node[1][1])
-                    y1 = max(next_node[2], node[1][2])
-                    y2 = min(next_node[3], node[1][3])
-                    point = ((x1 + x2)/2, (y1 + y2)/2)
+                    point = calculate_midpoint(next_node, node[1])
                     prev_point = detail_points[node[1]]
                     distance = forward_dist[detail_points[node[1]]] + point_distance(prev_point, point)
                     detail_points[next_node] = point
@@ -307,11 +295,7 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
                 if next_node not in backward_prev:
                     backward_prev[next_node] = node[1]
                     #create the point that we will be moving to
-                    x1 = max(next_node[0], node[1][0])
-                    x2 = min(next_node[1], node[1][1])
-                    y1 = max(next_node[2], node[1][2])
-                    y2 = min(next_node[3], node[1][3])
-                    point = ((x1 + x2)/2, (y1 + y2)/2)
+                    point = calculate_midpoint(next_node, node[1])
                     prev_point = detail_points[node[1]]
                     distance = backward_dist[detail_points[node[1]]] + point_distance(prev_point, point)
                     detail_points[next_node] = point
