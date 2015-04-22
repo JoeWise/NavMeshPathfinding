@@ -244,6 +244,13 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
 
         #Check if node is found
         if node[1] in backward_prev and node[1] in forward_prev:
+               #make final conjoining point
+            x1 = max(backward_prev[node[1]][0], node[1][0])
+            x2 = min(backward_prev[node[1]][1], node[1][1])
+            y1 = max(backward_prev[node[1]][2], node[1][2])
+            y2 = min(backward_prev[node[1]][3], node[1][3])
+            point = ((x1 + x2)/2, (y1 + y2)/2)
+
             forward_path = []
             backward_path = []
             check_node = node[1]
@@ -257,6 +264,8 @@ def bidirectional_dijkstras(source_point, destination_point, mesh):
                     backward_path.append(detail_points[check_node])
                 check_node = backward_prev[check_node]
             forward_path.reverse()
+
+            forward_path.append(point)
 
             for segment in backward_path:
                 forward_path.append(segment)
