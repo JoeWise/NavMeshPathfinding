@@ -33,6 +33,7 @@ def find_path(source_point, destination_point, mesh):
     #loaded_path, prev = bfs(source_box, destination_box, mesh)
     #loaded_path, prev = dijkstras(source_point, destination_point, mesh)
     loaded_path, prev = a_star(source_point, destination_point, mesh)
+    loaded_path, prev = bidirectional_dijkstras(source_point, destination_point, mesh)
     #add the initial point to the path
     if loaded_path == []:
         print ("no path found!")
@@ -207,4 +208,99 @@ def a_star(source_point, destination_point, mesh):
                 dist_remaining = point_distance(point, destination_point)
                 heappush(q, (distance + dist_remaining, next_node))
 
+    return [], prev
+
+def bidirectional_dijkstras(source_point, destination_point, mesh):
+
+    #first find the source and destination boxes
+    source_box = ()
+    destination_box = ()
+
+    boxes = mesh['boxes']
+    for box in boxes:
+        if box[0] < source_point[0] < box[1] and box[2] < source_point[1] < box[3]:
+            source_box = box
+        if box[0] < destination_point[0] < box[1] and box[2] < destination_point[1] < box[3]:
+            destination_box = box
+
+    forward_prev = {source_box: None}
+    backward_prev = {destination_box: None}
+    detail_points = {}
+    forward_dist = {}
+    backward_dist = {}
+
+    detail_points[source_box] = source_point
+    detail_points[destination_box] = destination_point
+    forward_dist[source_point] = 0
+    backward_dist[destination_point] = 0
+    q = [(0, source_box)]
+    heappush(q, (0, destination_box))
+
+    #nodes will contain their distance to make heappop pop the next shortest node
+    node = (0, source_box)
+
+    while q:
+        node = heappop(q)
+
+        #Check if node is found
+        if node[1] in backward_prev and node[1] in forward_prev:
+            forward_path = []
+            backward_path = []
+            check_node = node[1]
+            while check_node:
+                if forward_prev[check_node]:
+                    forward_path.append(detail_points[check_node])
+                check_node = forward_prev[check_node]
+            check_node = node[1]
+            while check_node:
+                if backward_prev[check_node]:
+                    backward_path.append(detail_points[check_node])
+                check_node = backward_prev[check_node]
+            forward_path.reverse()
+
+            for segment in backward_path:
+                forward_path.append(segment)
+            prev = forward_prev.copy()
+            prev.update(backward_prev)
+            #prev[(-1,-1,-1,-1)] = forward_prev[node[1]]
+            #prev[(-2,-1,-1,-1)] = backward_prev[node[1]]
+
+            return forward_path, prev
+
+        adj = mesh['adj']
+        neighbors = adj[node[1]]
+        if node[1] not in backward_prev:
+            for next_node in neighbors:
+                if next_node not in forward_prev:
+                    forward_prev[next_node] = node[1]
+                    #create the point that we will be moving to
+                    x1 = max(next_node[0], node[1][0])
+                    x2 = min(next_node[1], node[1][1])
+                    y1 = max(next_node[2], node[1][2])
+                    y2 = min(next_node[3], node[1][3])
+                    point = ((x1 + x2)/2, (y1 + y2)/2)
+                    prev_point = detail_points[node[1]]
+                    distance = forward_dist[detail_points[node[1]]] + point_distance(prev_point, point)
+                    detail_points[next_node] = point
+                    forward_dist[point] = distance
+                    heappush(q, (distance, next_node))
+        else:
+            for next_node in neighbors:
+                if next_node not in backward_prev:
+                    backward_prev[next_node] = node[1]
+                    #create the point that we will be moving to
+                    x1 = max(next_node[0], node[1][0])
+                    x2 = min(next_node[1], node[1][1])
+                    y1 = max(next_node[2], node[1][2])
+                    y2 = min(next_node[3], node[1][3])
+                    point = ((x1 + x2)/2, (y1 + y2)/2)
+                    prev_point = detail_points[node[1]]
+                    distance = backward_dist[detail_points[node[1]]] + point_distance(prev_point, point)
+                    detail_points[next_node] = point
+                    backward_dist[point] = distance
+                    heappush(q, (distance, next_node))
+
+    forward_path.append(backward_path)
+    prev = forward_prev.copy()
+    prev.update(backward_prev)
     return [], prev
